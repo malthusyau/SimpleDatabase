@@ -1,4 +1,5 @@
 JC = javac
+JFLAGS = 
 
 default: SimpleDatabase.class RunDatabase.class
 

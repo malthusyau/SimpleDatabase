@@ -26,6 +26,11 @@ public class SimpleDatabase {
         log = new Stack<Stack<Transaction>>();
     }
 
+    public static void main(String[] args) {
+        SimpleDatabase db = new SimpleDatabase();
+        db.run();
+    }
+
     private void error(String msg) {
         System.out.println(msg);
     }
@@ -36,6 +41,7 @@ public class SimpleDatabase {
         Scanner tokenizer;
 
         dbRunning = true;
+        System.out.println("Welcome to SimpleDatabase");
 
         while (dbRunning && console.hasNextLine()) {
             String command;
@@ -135,12 +141,13 @@ public class SimpleDatabase {
                 }
             }
         }
+        System.out.println("Goodbye!");
     }
 
     /* 
      * SET command, create or update a DB entry 
      */
-    private void set(String key, int val) {
+    private void set(String key, Integer val) {
         Integer oldVal = null;
 
         if (dbHash.containsKey(key)) {
@@ -148,30 +155,23 @@ public class SimpleDatabase {
             decCount(oldVal);
         }
 
-        dbHash.put(key, val);
-        incCount(val);
+        if (val == null) {
+            dbHash.remove(key);
+        } else {
+            dbHash.put(key, val);
+            incCount(val);
+        }
 
-        /* OPTIMIZE skip unchanged transactions */
-        if (curTransactions != null)
-            curTransactions.push(new Transaction(key, oldVal, val));
+        if (curTransactions != null &&
+            (oldVal == null || val == null || !oldVal.equals(val)))
+                curTransactions.push(new Transaction(key, oldVal, val));
     }
 
     /* 
      * UNSET command, delete a DB entry 
      */
     private void unset(String key) {
-        Integer oldVal = null;
-
-        if (dbHash.containsKey(key)) {
-            oldVal = dbHash.get(key);
-            decCount(oldVal);
-        }
-
-        dbHash.remove(key);
-
-        /* OPTIMIZE combine UNSET with SET */
-        if (curTransactions != null)
-            curTransactions.push(new Transaction(key, oldVal, null));
+        set(key, null);
     }
 
     /* 
@@ -235,7 +235,6 @@ public class SimpleDatabase {
      */
     private void end() {
        dbRunning = false;
-       System.out.println("Farewell!");
     }
 
     /*
